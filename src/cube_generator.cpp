@@ -29,6 +29,8 @@ int main(int argc, char *argv[]) {
   cout << "Original state: " << endl;
   PrintCube(cube, sizeof(cube));
   scramble[0] = rand() % kNumTurns;
+  // scramble[0] = kU2;
+  TurnCube(cube, scramble[0]);
   for (uint8_t i = 1; i < num_turns; i++) {
     do {
       scramble[i] = rand() % kNumTurns;
