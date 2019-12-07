@@ -16,30 +16,6 @@ void PrintCube(uint8_t *cube, uint8_t size) {
   cout << "]" << endl;
 }
 
-void TurnCube(uint8_t *cube, uint8_t turn) {
-  const uint8_t *positions = positions_on_face[turn / 3];
-  uint8_t tmp[8];
-  for (uint8_t i = 0; i < 8; i++) {
-    tmp[i] = cube[positions[i]];
-  }
-  // For each corner position that this turn will affect
-  for (uint8_t i = 0; i < NUM_POSITIONS_PER_FACE / 2; i++) {
-    uint8_t new_value = tmp[i] + turn_orientation[turn][i];
-    if (tmp[i] / 3 != new_value / 3) {
-      new_value -= 3;
-    }
-    cube[turn_position[turn][i]] = new_value;
-  }
-  // For each edge position that this turn will affect
-  for (uint8_t i = NUM_POSITIONS_PER_FACE / 2; i < NUM_POSITIONS_PER_FACE; i++) {
-    uint8_t new_value = tmp[i] + turn_orientation[turn][i];
-    if (tmp[i] / 2 != new_value / 2) {
-      new_value -= 2;
-    }
-    cube[turn_position[turn][i]] = new_value;
-  }
-}
-
 int main(int argc, char *argv[]) {
   if (argc != 2) {
     cout << "Usage: ./cube_generator num_turns" << endl;

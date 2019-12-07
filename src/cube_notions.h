@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cstdint>
+
 #define NUM_POSITIONS_PER_FACE 8
 
 #define CORNER_POS_TO_FACET(p) (p * 2)
