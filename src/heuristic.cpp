@@ -82,7 +82,7 @@ void print_heuristic(uint8_t h[][24]) {
   cout << "Heuristic" << endl; 
   for (int i = 0; i < 12; i++) {
     for (int j = 0; j < 24; j++) {
-      cout << +h[i][j] << " ";
+      cout << +h[i][j] << ", ";
     }
     cout << endl;
   }
