@@ -112,8 +112,11 @@ int main(int argc, char *argv[]) {
 
   cout << "Original state: " << endl;
   PrintCube(cube, sizeof(cube));
-  for (uint8_t i = 0; i < num_turns; i++) {
-    scramble[i] = rand() % kNumTurns;
+  scramble[0] = rand() % kNumTurns;
+  for (uint8_t i = 1; i < num_turns; i++) {
+    do {
+      scramble[i] = rand() % kNumTurns;
+    } while (scramble[i - 1] / 3 == scramble[i] / 3);
     // cout << +scramble[i] << endl;
     TurnCube(cube, scramble[i]);
     // PrintCube(cube, sizeof(cube));
