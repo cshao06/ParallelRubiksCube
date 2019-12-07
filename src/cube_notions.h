@@ -2,6 +2,11 @@
 
 #define NUM_POSITIONS_PER_FACE 8
 
+#define CORNER_POS_TO_FACET(p) (p * 2)
+#define CORNER_FACET_TO_POS(f) (f / 2)
+#define EDGE_POS_TO_FACET(p) ((p - kNumCornerPositions) * 2 + kNumCornerFacets)
+#define EDGE_FACET_TO_POS(f) ((f - kNumCornerFacets) / 2 + kNumCornerPositions)
+
 enum Turns {
   kU_ = 0,
   kUp,
@@ -43,7 +48,8 @@ enum Positions {
   kDFR,
   kDRB,
   kDBL,
-  kUF,
+  kNumCornerPositions = 8,
+  kUF = 8,
   kUL,
   kUB,
   kUR,
@@ -56,6 +62,7 @@ enum Positions {
   kBL,
   kBR,
   kNumPositions,
+  kNumEdgePositions = kNumPositions - kNumCornerPositions,
 };
 
 enum Facets {
@@ -108,7 +115,13 @@ enum Facets {
   kbL,
   kBr,
   kbR,
-  kNumEdgeFacets,
-  kNumFacets = kNumEdgeFacets,
+  kNumFacets,
+  kNumEdgeFacets = kNumFacets - kNumCornerFacets,
 };
 
+extern const char *turns_str[kNumTurns];
+extern const uint8_t positions_on_face[kNumFaces][NUM_POSITIONS_PER_FACE];
+extern const uint8_t turn_position[kNumTurns][NUM_POSITIONS_PER_FACE];
+extern const uint8_t turn_orientation[kNumTurns][NUM_POSITIONS_PER_FACE];
+
+void TurnCube(uint8_t *cube, uint8_t turn);
