@@ -7,6 +7,7 @@
 #include <algorithm>
 #include <stdint.h>
 #include <inttypes.h>
+#include <ctime>
 using namespace std;
 
 void read_state(uint8_t* state){
@@ -48,6 +49,18 @@ void construct_heuristic_table(uint8_t* org_state){
     for (int i = 0;i < 20;i ++) que[0][i] = org_state[i];
     int l = 0, r = 1;
 
+    /*
+    for (int i = 0;i < 20;i ++){
+        cout << +org_state[i] << " ";
+    }
+    cout << endl;
+    TurnCube(org_state, 5);
+    for (int i = 0;i < 20;i ++){
+        cout << +org_state[i] << " ";
+    }
+    cout << endl;
+    */
+
     uint8_t* tmp = new uint8_t[20];
     cnt[0] = 0;
     while (l < r){
@@ -56,9 +69,9 @@ void construct_heuristic_table(uint8_t* org_state){
             TurnCube(tmp, i);
             bool have_new = false;
             for (int j = 8;j < 20;j ++){
-                if (heuristic[tmp[j] / 2 - 12][tmp[j] % 2 + (i - 8) * 2] == -1){
+                if (heuristic[tmp[j] / 2 - 12][tmp[j] % 2 + (j - 8) * 2] == -1){
                     have_new = true;
-                    heuristic[tmp[j] / 2 - 12][tmp[j] % 2 + (i - 8) * 2] = cnt[l] + 1;
+                    heuristic[tmp[j] / 2 - 12][tmp[j] % 2 + (j - 8) * 2] = cnt[l] + 1;
                 }
             }
             if (have_new){
@@ -71,7 +84,8 @@ void construct_heuristic_table(uint8_t* org_state){
     }
 }
 
-int ans[30], min_ext_h;
+int ans[30];
+double min_ext_h;
 bool dfs(double limit, uint8_t* cur, double g, int preturn){
     // judge whether we have found the solution
     bool reach_target = true;
@@ -91,7 +105,6 @@ bool dfs(double limit, uint8_t* cur, double g, int preturn){
         h += heuristic[cur[i] / 2 - 12][cur[i] % 2 + (i - 8) * 2];
     }
     h /= 4.0;
-
     if (g + h > limit){
         // no need to explore current node
         if (min_ext_h < 0.0 || g + h < min_ext_h){
@@ -104,7 +117,7 @@ bool dfs(double limit, uint8_t* cur, double g, int preturn){
             if (preturn / 3 == i / 3){
                 continue;
             }
-            for (int j = 0;j < 20;j ++) tmp[i] = cur[i];
+            for (int j = 0;j < 20;j ++) tmp[j] = cur[j];
             TurnCube(tmp, i);
             if (dfs(limit, tmp, g + 1, i)){
                 ans[++ ans[0]] = i;
@@ -116,23 +129,19 @@ bool dfs(double limit, uint8_t* cur, double g, int preturn){
     return false;
 }
 void iterative_deepening_astar(uint8_t* cur){
-    double limit = 0;
-    for (int i = 8;i < 20;i ++){
-        limit += heuristic[cur[i] / 2 - 12][cur[i] % 2 + (i - 8) * 2];
-    }
-    limit /= 4.0;
-
+    double limit = 0.0;
     bool find = false;
-    double min_ext_h = limit;
+    min_ext_h = limit;
     ans[0] = 0;
     while (!find) {
         limit = min_ext_h;
         min_ext_h = -1;
         find = dfs(limit, cur, 0.0, -1);
+        //cout << "limit = " << limit << endl;
     }
     cout << "solution sequence:" << endl;
     for (int i = ans[0];i; -- i){
-        cout << ans[i] <<", ";
+        cout << turns_str[ans[i]] <<", ";
     }
     cout << endl;
 }
@@ -167,7 +176,26 @@ int main(){
     */
 
     construct_heuristic_table(org_state);
+    /*
+    for (int i = 0;i < 12;i ++) {
+        for (int j = 0;j < 24;j ++){
+            printf("%d, ",heuristic[i][j]);
+        }
+        printf("\n");
+    }
+    */
+    time_t op = time(NULL);
     iterative_deepening_astar(cur_state);
+    time_t ed = time(NULL);
+    cout << "Time consumed: " << ed - op << "sec" << endl;
+
+    for (int i = ans[0];i; -- i){
+        TurnCube(cur_state, ans[i]);
+    }
+    for (int i = 0;i < 20;i ++){
+        cout << +cur_state[i] << " ";
+    }
+    cout << endl;
 
     return 0;
 }
