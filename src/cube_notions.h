@@ -2,6 +2,8 @@
 
 #include <cstdint>
 
+#define CUBE_ARR_SIZE 12+8
+
 #define NUM_POSITIONS_PER_FACE 8
 
 #define CORNER_POS_TO_FACET(p) (p * 2)

@@ -1,4 +1,3 @@
-#include "cube_notions.h"
 #include <cstdio>
 #include <iostream>
 #include <cstring>
@@ -8,31 +7,11 @@
 #include <stdint.h>
 #include <inttypes.h>
 #include <ctime>
-using namespace std;
 
-void read_state(uint8_t* state){
-    string str;
-    getline(cin,str);
-    //cout << str << endl;
-    int len = str.length();
-    int num = -1, id = 0;
-    for (int i = 0;i < len;i ++){
-        if (!isdigit(str[i])){
-            // judge whether need to update state
-            if (num != -1){
-                state[id ++] = uint8_t (num);
-                num = -1;
-            }
-        }else{
-            // update num
-            if (num == -1){
-                num = str[i] - '0';
-            }else{
-                num = num * 10 + str[i] - '0';
-            }
-        }
-    }
-}
+#include "cube_notions.h"
+#include "cube_generator.h"
+
+using namespace std;
 
 int heuristic[12][24];
 
