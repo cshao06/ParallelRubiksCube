@@ -8,7 +8,15 @@
 #include "cube_notions.cu"
 #include "cube_generator.cu"
 
-__global__ void gpu_search(uint8_t* data, uint8_t* past_step, uint8_t* global_best_step){
+__global__ void gpu_search(uint8_t* data, uint8_t* past_step, uint8_t* global_best_step, uint8_t* d_heuristic){
+    __shared__ uint8_t heuristic[12][24];
+    if (threadIdx.x == 0){
+        for (int i = 0, k = 0;i < 12;i ++)
+            for (int j = 0;j < 24;j ++){
+                heuristic[i][j] = d_heuristic[k ++];
+            }
+    }
+    __syncthreads();
     int global_index = (threadIdx.x + blockIdx.x * blockDim.x) * 20;
     uint8_t sk[20][20];
     uint8_t g[20];
@@ -83,8 +91,8 @@ __global__ void gpu_search(uint8_t* data, uint8_t* past_step, uint8_t* global_be
                     continue;
                 }
                 if (g[dep] + h > limit){
-                    if (min_ext_h < 0.0 || g[step] + h < min_ext_h){
-                        min_ext_h = g[step] + h;
+                    if (min_ext_h < 0.0 || g[dep] + h < min_ext_h){
+                        min_ext_h = g[dep] + h;
                     }
                     -- dep;
                     continue;
@@ -126,102 +134,6 @@ __global__ void gpu_search(uint8_t* data, uint8_t* past_step, uint8_t* global_be
     }
 }
 
-const int gridsize = 512;
-const int blocksize = 1024;
-uint8_t que[gridsize * blocksize * 2 + 5][20];
-uint8_t que_flat[gridsize * blocksize * 2 * 20];
-uint8_t cnt[gridsize * blocksize * 2 + 5];
-uint8_t cnt_flat[gridsize * blocksize * 2];
-
-void generate_subproblems(uint8_t* cur, int* numofgpu){
-    int numofdev = *numofgpu;
-    memcpy(que[0], cur, sizeof(uint8_t) * 20);
-    int mod = gridsize * blocksize * numofdev + 1;
-    int l = 0, r = 1, numofsub = 1;
-    cnt[0] = 0;
-    while (true){
-        for (int i = 0;i < kNumTurns;i ++){
-            memcpy(que[r], que[l], sizeof(uint8_t) * 20);
-            TurnCube(que[r], i);
-            cnt[r] = cnt[l] + 1;
-            r = (r + 1) % mod;
-            if (++ numofsub == mod - 1){
-                break;
-            }
-        }
-        if (numofsub == mod - 1){
-            break;
-        }
-        l = (l + 1) % mod;
-        -- numofsub;
-    }
-
-    for (int i = l,j = 0, w = 0;i != r;i = (i + 1) % mod){
-        for (int k = 0;k < 20;k ++){
-            que_flat[j ++] = que[i][k];
-        }
-        cnt_flat[w ++] = cnt[i];
-    }
-
-    uint8_t* d[2];
-    uint8_t* d_step[2];
-    uint8_t* best_step[2];
-    for (int dev_id = 0;dev_id < numofdev;dev_id ++){
-        cudaSetDevice(dev_id);
-
-        cudaMalloc((void **)&d[dev_id], gridsize * blocksize * 20 * sizeof(uint8_t));
-        cudaMemcpy(d[dev_id], que_flat + dev_id * gridsize * blocksize * 20, gridsize * blocksize * 20 * sizeof(uint8_t), cudaMemcpyHostToDevice);
-
-        cudaMalloc((void **)&d_step[dev_id], gridsize * blocksize * sizeof(uint8_t));
-        cudaMemcpy(d_step[dev_id], cnt_flat + dev_id * gridsize * blocksize, gridsize * blocksize * sizeof(uint8_t), cudaMemcpyHostToDevice);
-
-        cudaMalloc((void **)&best_step[dev_id], sizeof(uint8_t));
-        cudaMemset(best_step[dev_id], 20, sizeof(uint8_t));
-    }
-
-    dim3 grid_dim = dim3(gridsize, 1, 1);
-    dim3 block_dim = dim3(blocksize, 1, 1);
-
-    std :: cout << "Start timer" << std :: endl;
-    cudaEvent_t stop, start;
-    float elapsed_time;
-    cudaEventCreate(&start);
-    cudaEventCreate(&stop);
-    cudaEventRecord(start, 0);
-
-    for (int dev_id = 0;dev_id < numofdev; dev_id ++){
-        cudaSetDevice(dev_id);
-        gpu_search<<<grid_dim, block_dim>>>(d[dev_id], d_step[dev_id], best_step[dev_id]);
-    }
-
-    // Wait for GPU to finish before accessing on host
-    for (int dev_id = 0;dev_id < *numofgpu; dev_id ++){
-        cudaSetDevice(dev_id);
-        cudaDeviceSynchronize();
-    }
-
-    cudaEventRecord(stop, 0);
-    cudaEventSynchronize(stop);
-    cudaEventElapsedTime(&elapsed_time, start, stop);
-    cout << "Timer stopped" << endl;
-    cout << "Time consumed: " << elapsed_time << endl;
-
-    uint8_t* final_answer[2] = new uint8_t[2];
-    for (int dev_id = 0;dev_id < numofdev; dev_id ++){
-        cudaSetDevice(dev_id);
-        cudaDeviceSynchronize();
-        cudaMemcpy(final_answer[dev_id], best_step[dev_id], sizeof(uint8_t), cudaMemcpyDeviceToHost);
-    }
-
-    uint8_t optimal_step = final_answer[0];
-    for (int dev_id = 1; dev_id < numofdev; dev_id ++){
-        if (final_answer[dev_id] < optimal_step){
-            optimal_step = final_answer[dev_id];
-        }
-    }
-    std :: cout << "Optimal solution to recover the cube: " << +optimal_step << std :: endl;
-}
-
 int heuristic[12][24];
 
 void construct_heuristic_table(uint8_t* org_state){
@@ -258,6 +170,114 @@ void construct_heuristic_table(uint8_t* org_state){
         }
         ++ l;
     }
+}
+
+const int gridsize = 512;
+const int blocksize = 1024;
+uint8_t que[gridsize * blocksize * 2 + 5][20];
+uint8_t que_flat[gridsize * blocksize * 2 * 20];
+uint8_t cnt[gridsize * blocksize * 2 + 5];
+uint8_t cnt_flat[gridsize * blocksize * 2];
+uint8_t heuristic_flat[12 * 24];
+
+void generate_subproblems(uint8_t* cur, int* numofgpu){
+    int numofdev = *numofgpu;
+    memcpy(que[0], cur, sizeof(uint8_t) * 20);
+    int mod = gridsize * blocksize * numofdev + 1;
+    int l = 0, r = 1, numofsub = 1;
+    cnt[0] = 0;
+    while (true){
+        for (int i = 0;i < kNumTurns;i ++){
+            memcpy(que[r], que[l], sizeof(uint8_t) * 20);
+            TurnCube(que[r], i);
+            cnt[r] = cnt[l] + 1;
+            r = (r + 1) % mod;
+            if (++ numofsub == mod - 1){
+                break;
+            }
+        }
+        if (numofsub == mod - 1){
+            break;
+        }
+        l = (l + 1) % mod;
+        -- numofsub;
+    }
+
+    for (int i = l,j = 0, w = 0;i != r;i = (i + 1) % mod){
+        for (int k = 0;k < 20;k ++){
+            que_flat[j ++] = que[i][k];
+        }
+        cnt_flat[w ++] = cnt[i];
+    }
+    for (int i = 0;i < 12 * 24;i ++){
+        heuristic_flat[i] = heuristic[i / 24][i % 24];
+    }
+
+    uint8_t* d[2];
+    uint8_t* d_step[2];
+    uint8_t* best_step[2];
+    uint8_t* d_heuristic[2];
+    for (int dev_id = 0;dev_id < numofdev;dev_id ++){
+        cudaSetDevice(dev_id);
+
+        cudaMalloc((void **)&d[dev_id], gridsize * blocksize * 20 * sizeof(uint8_t));
+        cudaMemcpy(d[dev_id], que_flat + dev_id * gridsize * blocksize * 20, gridsize * blocksize * 20 * sizeof(uint8_t), cudaMemcpyHostToDevice);
+
+        cudaMalloc((void **)&d_step[dev_id], gridsize * blocksize * sizeof(uint8_t));
+        cudaMemcpy(d_step[dev_id], cnt_flat + dev_id * gridsize * blocksize, gridsize * blocksize * sizeof(uint8_t), cudaMemcpyHostToDevice);
+
+        cudaMalloc((void **)&best_step[dev_id], sizeof(uint8_t));
+        cudaMemset(best_step[dev_id], 20, sizeof(uint8_t));
+
+        cudaMalloc((void **)&d_heuristic[dev_id], 12 * 24 * sizeof(uint8_t));
+        cudaMemcpy(d_heuristic[dev_id], heuristic_flat, 12 * 24 * sizeof(uint8_t), cudaMemcpyHostToDevice);
+    }
+
+    dim3 grid_dim = dim3(gridsize, 1, 1);
+    dim3 block_dim = dim3(blocksize, 1, 1);
+
+    std :: cout << "Start timer" << std :: endl;
+    cudaEvent_t stop, start;
+    float elapsed_time;
+    cudaEventCreate(&start);
+    cudaEventCreate(&stop);
+    cudaEventRecord(start, 0);
+
+    for (int dev_id = 0;dev_id < numofdev; dev_id ++){
+        cudaSetDevice(dev_id);
+        gpu_search<<<grid_dim, block_dim>>>(d[dev_id], d_step[dev_id], best_step[dev_id], d_heuristic[dev_id]);
+    }
+
+    // Wait for GPU to finish before accessing on host
+    for (int dev_id = 0;dev_id < *numofgpu; dev_id ++){
+        cudaSetDevice(dev_id);
+        cudaDeviceSynchronize();
+    }
+
+    cudaEventRecord(stop, 0);
+    cudaEventSynchronize(stop);
+    cudaEventElapsedTime(&elapsed_time, start, stop);
+    cout << "Timer stopped" << endl;
+    cout << "Time consumed: " << elapsed_time << endl;
+
+    uint8_t* final_answer[2];
+    for (int i = 0;i < 2;i ++){
+        final_answer[i] = new uint8_t;
+    }
+
+    for (int dev_id = 0;dev_id < numofdev; dev_id ++){
+        cudaSetDevice(dev_id);
+        cudaDeviceSynchronize();
+        cudaMemcpy(final_answer[dev_id], best_step[dev_id], sizeof(uint8_t), cudaMemcpyDeviceToHost);
+    }
+
+    uint8_t optimal_step = final_answer[0];
+    for (int dev_id = 1; dev_id < numofdev; dev_id ++){
+        if (final_answer[dev_id] < optimal_step){
+            optimal_step = final_answer[dev_id];
+        }
+    }
+    std :: cout << "Optimal solution to recover the cube: " << +optimal_step << std :: endl;
 }
 
 int main(){
