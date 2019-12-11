@@ -1,5 +1,4 @@
 #pragma once
-#include "cube_notions.h"
 using namespace std;
 
 void read_state(uint8_t* state);

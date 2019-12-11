@@ -5,8 +5,8 @@
 #include <math.h>
 #include <iostream>
 
-#include "cube_notions.cu"
-#include "cube_generator.cu"
+#include "cube_notions.h"
+#include "cube_generator.h"
 
 __global__ void gpu_search(uint8_t* data, uint8_t* past_step, int* global_best_step, uint8_t* d_heuristic){
     __shared__ uint8_t heuristic[12][24];

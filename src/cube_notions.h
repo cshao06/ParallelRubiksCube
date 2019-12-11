@@ -123,17 +123,21 @@ enum Facets {
   kNumEdgeFacets = kNumFacets - kNumCornerFacets,
 };
 
+// #ifdef __CUDA_ARCH__
 extern const char *turns_str[kNumTurns];
-extern const uint8_t positions_on_face[kNumFaces][NUM_POSITIONS_PER_FACE];
-extern const uint8_t turn_position[kNumTurns][NUM_POSITIONS_PER_FACE];
-extern const uint8_t turn_orientation[kNumTurns][NUM_POSITIONS_PER_FACE];
+extern __constant__ const uint8_t positions_on_face[kNumFaces][NUM_POSITIONS_PER_FACE];
+extern __constant__ const uint8_t turn_position[kNumTurns][NUM_POSITIONS_PER_FACE];
+extern __constant__ const uint8_t turn_orientation[kNumTurns][NUM_POSITIONS_PER_FACE];
+// #endif
 
 
 extern const uint8_t positions_on_face_cpu[kNumFaces][NUM_POSITIONS_PER_FACE];
 extern const uint8_t turn_position_cpu[kNumTurns][NUM_POSITIONS_PER_FACE];
 extern const uint8_t turn_orientation_cpu[kNumTurns][NUM_POSITIONS_PER_FACE];
 
-void TurnCube(uint8_t *cube, uint8_t turn);
+// #ifdef __CUDA_ARCH__
+__device__ void TurnCube(uint8_t *cube, uint8_t turn);
+// #endif
 
-void TurnCubeCPU(uint8_t *cube, uint8_t turn);
+__host__ void TurnCubeCPU(uint8_t *cube, uint8_t turn);
 

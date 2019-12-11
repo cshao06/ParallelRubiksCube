@@ -10,6 +10,7 @@ const char *turns_str[kNumTurns] = {
   "R", "R'", "R2",
 };
 
+// #ifdef __CUDA_ARCH__
 __constant__ const uint8_t positions_on_face[kNumFaces][NUM_POSITIONS_PER_FACE] = {
   {kURF, kUFL, kULB, kUBR, kUF, kUL, kUB, kUR},
   {kDLF, kDFR, kDRB, kDBL, kDF, kDR, kDB, kDL},
@@ -18,6 +19,7 @@ __constant__ const uint8_t positions_on_face[kNumFaces][NUM_POSITIONS_PER_FACE] 
   {kULB, kUFL, kDLF, kDBL, kUL, kFL, kDL, kBL},
   {kURF, kUBR, kDRB, kDFR, kUR, kBR, kDR, kFR},
 };
+// #endif
 
 const uint8_t positions_on_face_cpu[kNumFaces][NUM_POSITIONS_PER_FACE] = {
         {kURF, kUFL, kULB, kUBR, kUF, kUL, kUB, kUR},
@@ -28,6 +30,7 @@ const uint8_t positions_on_face_cpu[kNumFaces][NUM_POSITIONS_PER_FACE] = {
         {kURF, kUBR, kDRB, kDFR, kUR, kBR, kDR, kFR},
 };
 
+// #ifdef __CUDA_ARCH__
 __constant__ const uint8_t turn_position[kNumTurns][NUM_POSITIONS_PER_FACE] = {
   {kUFL, kULB, kUBR, kURF, kUL, kUB, kUR, kUF},
   {kUBR, kURF, kUFL, kULB, kUR, kUF, kUL, kUB},
@@ -48,6 +51,7 @@ __constant__ const uint8_t turn_position[kNumTurns][NUM_POSITIONS_PER_FACE] = {
   {kDFR, kURF, kUBR, kDRB, kFR, kUR, kBR, kDR},
   {kDRB, kDFR, kURF, kUBR, kDR, kFR, kUR, kBR},
 };
+// #endif
 
 const uint8_t turn_position_cpu[kNumTurns][NUM_POSITIONS_PER_FACE] = {
   {kUFL, kULB, kUBR, kURF, kUL, kUB, kUR, kUF},
@@ -70,6 +74,7 @@ const uint8_t turn_position_cpu[kNumTurns][NUM_POSITIONS_PER_FACE] = {
   {kDRB, kDFR, kURF, kUBR, kDR, kFR, kUR, kBR},
 };
 
+// #ifdef __CUDA_ARCH__
 __constant__ const uint8_t turn_orientation[kNumTurns][NUM_POSITIONS_PER_FACE] = {
    {0, 0, 0, 0, 0, 0, 0, 0},
    {0, 0, 0, 0, 0, 0, 0, 0},
@@ -90,6 +95,7 @@ __constant__ const uint8_t turn_orientation[kNumTurns][NUM_POSITIONS_PER_FACE] =
    {2, 1, 2, 1, 0, 0, 0, 0},
    {0, 0, 0, 0, 0, 0, 0, 0},
 };
+// #endif
 
 const uint8_t turn_orientation_cpu[kNumTurns][NUM_POSITIONS_PER_FACE] = {
  {0, 0, 0, 0, 0, 0, 0, 0},
@@ -112,36 +118,39 @@ const uint8_t turn_orientation_cpu[kNumTurns][NUM_POSITIONS_PER_FACE] = {
  {0, 0, 0, 0, 0, 0, 0, 0},
 };
 
-__constant__ const uint8_t edge_manhattan_dist[12][24] = {
-  {0, 3, 1, 2, 1, 3, 1, 2, 1, 3, 2, 2, 2, 3, 2, 2, 2, 1, 2, 1, 2, 2, 2, 2},
-  {1, 2, 0, 3, 1, 2, 1, 3, 2, 2, 2, 3, 2, 2, 1, 3, 2, 2, 1, 2, 1, 2, 2, 2},
-  {1, 3, 1, 2, 0, 3, 1, 2, 2, 3, 2, 2, 1, 3, 2, 2, 2, 2, 2, 2, 2, 1, 2, 1},
-  {1, 2, 1, 3, 1, 2, 0, 3, 2, 2, 1, 3, 2, 2, 2, 3, 1, 2, 2, 2, 2, 2, 1, 2},
-  {1, 3, 2, 2, 2, 3, 2, 2, 0, 3, 1, 2, 1, 3, 1, 2, 2, 1, 2, 1, 2, 2, 2, 2},
-  {2, 2, 2, 3, 2, 2, 1, 3, 1, 2, 0, 3, 1, 2, 1, 3, 1, 2, 2, 2, 2, 2, 1, 2},
-  {2, 3, 2, 2, 1, 3, 2, 2, 1, 3, 1, 2, 0, 3, 1, 2, 2, 2, 2, 2, 2, 1, 2, 1},
-  {2, 2, 1, 3, 2, 2, 2, 3, 1, 2, 1, 3, 1, 2, 0, 3, 2, 2, 1, 2, 1, 2, 2, 2},
-  {2, 1, 2, 2, 2, 2, 1, 2, 2, 1, 1, 2, 2, 2, 2, 2, 0, 3, 1, 3, 2, 3, 1, 3},
-  {2, 1, 1, 2, 2, 2, 2, 2, 2, 1, 2, 2, 2, 2, 1, 2, 1, 3, 0, 3, 1, 3, 2, 3},
-  {2, 2, 1, 2, 2, 1, 2, 2, 2, 2, 2, 2, 2, 1, 1, 2, 2, 3, 1, 3, 0, 3, 1, 3},
-  {2, 2, 2, 2, 2, 1, 1, 2, 2, 2, 1, 2, 2, 1, 2, 2, 1, 3, 2, 3, 1, 3, 0, 3},
-};
+// #ifdef __CUDA_ARCH__
+// __constant__ const uint8_t edge_manhattan_dist[12][24] = {
+//   {0, 3, 1, 2, 1, 3, 1, 2, 1, 3, 2, 2, 2, 3, 2, 2, 2, 1, 2, 1, 2, 2, 2, 2},
+//   {1, 2, 0, 3, 1, 2, 1, 3, 2, 2, 2, 3, 2, 2, 1, 3, 2, 2, 1, 2, 1, 2, 2, 2},
+//   {1, 3, 1, 2, 0, 3, 1, 2, 2, 3, 2, 2, 1, 3, 2, 2, 2, 2, 2, 2, 2, 1, 2, 1},
+//   {1, 2, 1, 3, 1, 2, 0, 3, 2, 2, 1, 3, 2, 2, 2, 3, 1, 2, 2, 2, 2, 2, 1, 2},
+//   {1, 3, 2, 2, 2, 3, 2, 2, 0, 3, 1, 2, 1, 3, 1, 2, 2, 1, 2, 1, 2, 2, 2, 2},
+//   {2, 2, 2, 3, 2, 2, 1, 3, 1, 2, 0, 3, 1, 2, 1, 3, 1, 2, 2, 2, 2, 2, 1, 2},
+//   {2, 3, 2, 2, 1, 3, 2, 2, 1, 3, 1, 2, 0, 3, 1, 2, 2, 2, 2, 2, 2, 1, 2, 1},
+//   {2, 2, 1, 3, 2, 2, 2, 3, 1, 2, 1, 3, 1, 2, 0, 3, 2, 2, 1, 2, 1, 2, 2, 2},
+//   {2, 1, 2, 2, 2, 2, 1, 2, 2, 1, 1, 2, 2, 2, 2, 2, 0, 3, 1, 3, 2, 3, 1, 3},
+//   {2, 1, 1, 2, 2, 2, 2, 2, 2, 1, 2, 2, 2, 2, 1, 2, 1, 3, 0, 3, 1, 3, 2, 3},
+//   {2, 2, 1, 2, 2, 1, 2, 2, 2, 2, 2, 2, 2, 1, 1, 2, 2, 3, 1, 3, 0, 3, 1, 3},
+//   {2, 2, 2, 2, 2, 1, 1, 2, 2, 2, 1, 2, 2, 1, 2, 2, 1, 3, 2, 3, 1, 3, 0, 3},
+// };
+// #endif
 
-const uint8_t edge_manhattan_dist_cpu[12][24] = {
-{0, 3, 1, 2, 1, 3, 1, 2, 1, 3, 2, 2, 2, 3, 2, 2, 2, 1, 2, 1, 2, 2, 2, 2},
-{1, 2, 0, 3, 1, 2, 1, 3, 2, 2, 2, 3, 2, 2, 1, 3, 2, 2, 1, 2, 1, 2, 2, 2},
-{1, 3, 1, 2, 0, 3, 1, 2, 2, 3, 2, 2, 1, 3, 2, 2, 2, 2, 2, 2, 2, 1, 2, 1},
-{1, 2, 1, 3, 1, 2, 0, 3, 2, 2, 1, 3, 2, 2, 2, 3, 1, 2, 2, 2, 2, 2, 1, 2},
-{1, 3, 2, 2, 2, 3, 2, 2, 0, 3, 1, 2, 1, 3, 1, 2, 2, 1, 2, 1, 2, 2, 2, 2},
-{2, 2, 2, 3, 2, 2, 1, 3, 1, 2, 0, 3, 1, 2, 1, 3, 1, 2, 2, 2, 2, 2, 1, 2},
-{2, 3, 2, 2, 1, 3, 2, 2, 1, 3, 1, 2, 0, 3, 1, 2, 2, 2, 2, 2, 2, 1, 2, 1},
-{2, 2, 1, 3, 2, 2, 2, 3, 1, 2, 1, 3, 1, 2, 0, 3, 2, 2, 1, 2, 1, 2, 2, 2},
-{2, 1, 2, 2, 2, 2, 1, 2, 2, 1, 1, 2, 2, 2, 2, 2, 0, 3, 1, 3, 2, 3, 1, 3},
-{2, 1, 1, 2, 2, 2, 2, 2, 2, 1, 2, 2, 2, 2, 1, 2, 1, 3, 0, 3, 1, 3, 2, 3},
-{2, 2, 1, 2, 2, 1, 2, 2, 2, 2, 2, 2, 2, 1, 1, 2, 2, 3, 1, 3, 0, 3, 1, 3},
-{2, 2, 2, 2, 2, 1, 1, 2, 2, 2, 1, 2, 2, 1, 2, 2, 1, 3, 2, 3, 1, 3, 0, 3},
-};
+// const uint8_t edge_manhattan_dist_cpu[12][24] = {
+// {0, 3, 1, 2, 1, 3, 1, 2, 1, 3, 2, 2, 2, 3, 2, 2, 2, 1, 2, 1, 2, 2, 2, 2},
+// {1, 2, 0, 3, 1, 2, 1, 3, 2, 2, 2, 3, 2, 2, 1, 3, 2, 2, 1, 2, 1, 2, 2, 2},
+// {1, 3, 1, 2, 0, 3, 1, 2, 2, 3, 2, 2, 1, 3, 2, 2, 2, 2, 2, 2, 2, 1, 2, 1},
+// {1, 2, 1, 3, 1, 2, 0, 3, 2, 2, 1, 3, 2, 2, 2, 3, 1, 2, 2, 2, 2, 2, 1, 2},
+// {1, 3, 2, 2, 2, 3, 2, 2, 0, 3, 1, 2, 1, 3, 1, 2, 2, 1, 2, 1, 2, 2, 2, 2},
+// {2, 2, 2, 3, 2, 2, 1, 3, 1, 2, 0, 3, 1, 2, 1, 3, 1, 2, 2, 2, 2, 2, 1, 2},
+// {2, 3, 2, 2, 1, 3, 2, 2, 1, 3, 1, 2, 0, 3, 1, 2, 2, 2, 2, 2, 2, 1, 2, 1},
+// {2, 2, 1, 3, 2, 2, 2, 3, 1, 2, 1, 3, 1, 2, 0, 3, 2, 2, 1, 2, 1, 2, 2, 2},
+// {2, 1, 2, 2, 2, 2, 1, 2, 2, 1, 1, 2, 2, 2, 2, 2, 0, 3, 1, 3, 2, 3, 1, 3},
+// {2, 1, 1, 2, 2, 2, 2, 2, 2, 1, 2, 2, 2, 2, 1, 2, 1, 3, 0, 3, 1, 3, 2, 3},
+// {2, 2, 1, 2, 2, 1, 2, 2, 2, 2, 2, 2, 2, 1, 1, 2, 2, 3, 1, 3, 0, 3, 1, 3},
+// {2, 2, 2, 2, 2, 1, 1, 2, 2, 2, 1, 2, 2, 1, 2, 2, 1, 3, 2, 3, 1, 3, 0, 3},
+// };
 
+// #ifdef __CUDA_ARCH__
 __device__ void TurnCube(uint8_t *cube, uint8_t turn) {
   const uint8_t *positions = positions_on_face[turn / 3];
   uint8_t tmp[8];
@@ -165,6 +174,7 @@ __device__ void TurnCube(uint8_t *cube, uint8_t turn) {
     cube[turn_position[turn][i]] = new_value;
   }
 }
+// #endif
 
 __host__ void TurnCubeCPU(uint8_t *cube, uint8_t turn) {
   const uint8_t *positions = positions_on_face_cpu[turn / 3];

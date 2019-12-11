@@ -2,6 +2,8 @@
 #include <iomanip>
 #include <time.h>
 #include "cube_generator.h"
+// #include "cube_notions_cpu.h"
+#include "cube_notions.h"
 
 using namespace std;
 
