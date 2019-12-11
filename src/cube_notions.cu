@@ -1,5 +1,4 @@
 #include <stdint.h>
-#include "cube_notions.h"
 
 const char *turns_str[kNumTurns] = {
   "U", "U'", "U2",
