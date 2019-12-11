@@ -129,3 +129,4 @@ extern const uint8_t turn_position[kNumTurns][NUM_POSITIONS_PER_FACE];
 extern const uint8_t turn_orientation[kNumTurns][NUM_POSITIONS_PER_FACE];
 
 void TurnCube(uint8_t *cube, uint8_t turn);
+void PrintCube(uint8_t *cube, uint8_t size);

@@ -76,9 +76,9 @@ int main(){
     std :: cout << "Number of GPUs on board" << numofgpu << std :: endl;
 
     // read data
-    freopen("data.txt","r",stdin);
-    string str;
-    getline(cin,str);
+    // freopen("data.txt","r",stdin);
+    // string str;
+    // getline(cin,str);
 
     // uint8_t* org_state = new uint8_t[CUBE_ARR_SIZE];
     // uint8_t* cur_state = new uint8_t[CUBE_ARR_SIZE];

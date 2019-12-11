@@ -32,15 +32,6 @@ void read_state(uint8_t* state){
     }
 }
 
-
-void PrintCube(uint8_t *cube, uint8_t size) {
-  cout << "[ ";
-  for (uint8_t i = 0; i < size; i++) {
-    cout << setw(2) << +cube[i] << ", ";
-  }
-  cout << "]" << endl;
-}
-
 void generate_cube(uint8_t *cube, uint8_t num_turns) {
   memcpy(cube, solved_cube, CUBE_ARR_SIZE);
   uint8_t *scramble = (uint8_t *)malloc(num_turns);
