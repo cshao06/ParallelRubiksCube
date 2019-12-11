@@ -82,7 +82,7 @@ __global__ void gpu_search(uint8_t* data, uint8_t* past_step, uint8_t* global_be
                     -- dep;
                     continue;
                 }
-                if (g[step] + h > limit){
+                if (g[dep] + h > limit){
                     if (min_ext_h < 0.0 || g[step] + h < min_ext_h){
                         min_ext_h = g[step] + h;
                     }
@@ -129,7 +129,7 @@ __global__ void gpu_search(uint8_t* data, uint8_t* past_step, uint8_t* global_be
 const int gridsize = 512;
 const int blocksize = 1024;
 uint8_t que[gridsize * blocksize * 2 + 5][20];
-uint8_t que_flat[gridsize * blocksize * 2 * 20]
+uint8_t que_flat[gridsize * blocksize * 2 * 20];
 uint8_t cnt[gridsize * blocksize * 2 + 5];
 uint8_t cnt_flat[gridsize * blocksize * 2];
 
@@ -183,7 +183,7 @@ void generate_subproblems(uint8_t* cur, int* numofgpu){
     dim3 block_dim = dim3(blocksize, 1, 1);
 
     std :: cout << "Start timer" << std :: endl;
-    cudaEvent_t stop;
+    cudaEvent_t stop, start;
     float elapsed_time;
     cudaEventCreate(&start);
     cudaEventCreate(&stop);
