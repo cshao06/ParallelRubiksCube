@@ -8,7 +8,7 @@
 #include "cube_notions.cu"
 #include "cube_generator.cu"
 
-__global__ void gpu_search(uint8_t* data, uint8_t* past_step, uint8_t* global_best_step, uint8_t* d_heuristic){
+__global__ void gpu_search(uint8_t* data, uint8_t* past_step, int* global_best_step, uint8_t* d_heuristic){
     __shared__ uint8_t heuristic[12][24];
     if (threadIdx.x == 0){
         for (int i = 0, k = 0;i < 12;i ++)
@@ -19,7 +19,7 @@ __global__ void gpu_search(uint8_t* data, uint8_t* past_step, uint8_t* global_be
     __syncthreads();
     int global_index = (threadIdx.x + blockIdx.x * blockDim.x) * 20;
     uint8_t sk[20][20];
-    uint8_t g[20];
+    int g[20];
     bool visit[20];
     for (int i = 0;i < 20;i ++){
         visit[i] = false;
@@ -215,7 +215,7 @@ void generate_subproblems(uint8_t* cur, int* numofgpu){
 
     uint8_t* d[2];
     uint8_t* d_step[2];
-    uint8_t* best_step[2];
+    int* best_step[2];
     uint8_t* d_heuristic[2];
     for (int dev_id = 0;dev_id < numofdev;dev_id ++){
         cudaSetDevice(dev_id);
@@ -226,8 +226,8 @@ void generate_subproblems(uint8_t* cur, int* numofgpu){
         cudaMalloc((void **)&d_step[dev_id], gridsize * blocksize * sizeof(uint8_t));
         cudaMemcpy(d_step[dev_id], cnt_flat + dev_id * gridsize * blocksize, gridsize * blocksize * sizeof(uint8_t), cudaMemcpyHostToDevice);
 
-        cudaMalloc((void **)&best_step[dev_id], sizeof(uint8_t));
-        cudaMemset(best_step[dev_id], 20, sizeof(uint8_t));
+        cudaMalloc((void **)&best_step[dev_id], sizeof(int));
+        cudaMemset(best_step[dev_id], 20, sizeof(int));
 
         cudaMalloc((void **)&d_heuristic[dev_id], 12 * 24 * sizeof(uint8_t));
         cudaMemcpy(d_heuristic[dev_id], heuristic_flat, 12 * 24 * sizeof(uint8_t), cudaMemcpyHostToDevice);
@@ -271,10 +271,10 @@ void generate_subproblems(uint8_t* cur, int* numofgpu){
         cudaMemcpy(final_answer[dev_id], best_step[dev_id], sizeof(uint8_t), cudaMemcpyDeviceToHost);
     }
 
-    uint8_t optimal_step = final_answer[0];
+    uint8_t optimal_step = *final_answer[0];
     for (int dev_id = 1; dev_id < numofdev; dev_id ++){
-        if (final_answer[dev_id] < optimal_step){
-            optimal_step = final_answer[dev_id];
+        if ((*final_answer[dev_id]) < optimal_step){
+            optimal_step = *final_answer[dev_id];
         }
     }
     std :: cout << "Optimal solution to recover the cube: " << +optimal_step << std :: endl;
