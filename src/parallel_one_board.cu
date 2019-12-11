@@ -154,7 +154,7 @@ void construct_heuristic_table(uint8_t* org_state){
     while (l < r){
         for (int i = 0;i < kNumTurns;i ++){
             memcpy(tmp, que[l], sizeof(uint8_t) * 20);
-            TurnCube(tmp, i);
+            TurnCubeCPU(tmp, i);
             bool have_new = false;
             for (int j = 8;j < 20;j ++){
                 if (heuristic[tmp[j] / 2 - 12][tmp[j] % 2 + (j - 8) * 2] == -1){
@@ -189,7 +189,7 @@ void generate_subproblems(uint8_t* cur, int* numofgpu){
     while (true){
         for (int i = 0;i < kNumTurns;i ++){
             memcpy(que[r], que[l], sizeof(uint8_t) * 20);
-            TurnCube(que[r], i);
+            TurnCubeCPU(que[r], i);
             cnt[r] = cnt[l] + 1;
             r = (r + 1) % mod;
             if (++ numofsub == mod - 1){

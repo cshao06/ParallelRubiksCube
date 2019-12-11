@@ -50,13 +50,13 @@ void generate_cube(uint8_t *cube, uint8_t num_turns) {
   cout << "Original state: " << endl;
   PrintCube(cube, CUBE_ARR_SIZE);
   scramble[0] = rand() % kNumTurns;
-  TurnCube(cube, scramble[0]);
+  TurnCubeCPU(cube, scramble[0]);
   for (uint8_t i = 1; i < num_turns; i++) {
     do {
       scramble[i] = rand() % kNumTurns;
     } while (scramble[i - 1] / 3 == scramble[i] / 3);
     // cout << +scramble[i] << endl;
-    TurnCube(cube, scramble[i]);
+    TurnCubeCPU(cube, scramble[i]);
     // PrintCube(cube, sizeof(cube));
   }
 
