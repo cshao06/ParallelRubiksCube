@@ -19,7 +19,7 @@ __constant__ const uint8_t positions_on_face[kNumFaces][NUM_POSITIONS_PER_FACE] 
   [kR] = {kURF, kUBR, kDRB, kDFR, kUR, kBR, kDR, kFR},
 };
 
-const uint8_t positions_on_face[kNumFaces][NUM_POSITIONS_PER_FACE] = {
+const uint8_t positions_on_face_cpu[kNumFaces][NUM_POSITIONS_PER_FACE] = {
         [kU] = {kURF, kUFL, kULB, kUBR, kUF, kUL, kUB, kUR},
         [kD] = {kDLF, kDFR, kDRB, kDBL, kDF, kDR, kDB, kDL},
         [kF] = {kUFL, kURF, kDFR, kDLF, kUF, kFR, kDF, kFL},
@@ -49,7 +49,7 @@ __constant__ const uint8_t turn_position[kNumTurns][NUM_POSITIONS_PER_FACE] = {
   [kR2] = {kDRB, kDFR, kURF, kUBR, kDR, kFR, kUR, kBR},
 };
 
-const uint8_t turn_position[kNumTurns][NUM_POSITIONS_PER_FACE] = {
+const uint8_t turn_position_cpu[kNumTurns][NUM_POSITIONS_PER_FACE] = {
 [kU_] = {kUFL, kULB, kUBR, kURF, kUL, kUB, kUR, kUF},
 [kUp] = {kUBR, kURF, kUFL, kULB, kUR, kUF, kUL, kUB},
 [kU2] = {kULB, kUBR, kURF, kUFL, kUB, kUR, kUF, kUL},
@@ -91,7 +91,7 @@ __constant__ const uint8_t turn_orientation[kNumTurns][NUM_POSITIONS_PER_FACE] =
   [kR2] = {0, 0, 0, 0, 0, 0, 0, 0},
 };
 
-const uint8_t turn_orientation[kNumTurns][NUM_POSITIONS_PER_FACE] = {
+const uint8_t turn_orientation_cpu[kNumTurns][NUM_POSITIONS_PER_FACE] = {
 [kU_] = {0, 0, 0, 0, 0, 0, 0, 0},
 [kUp] = {0, 0, 0, 0, 0, 0, 0, 0},
 [kU2] = {0, 0, 0, 0, 0, 0, 0, 0},
@@ -127,7 +127,7 @@ __constant__ const uint8_t edge_manhattan_dist[12][24] = {
   {2, 2, 2, 2, 2, 1, 1, 2, 2, 2, 1, 2, 2, 1, 2, 2, 1, 3, 2, 3, 1, 3, 0, 3},
 };
 
-const uint8_t edge_manhattan_dist[12][24] = {
+const uint8_t edge_manhattan_dist_cpu[12][24] = {
 {0, 3, 1, 2, 1, 3, 1, 2, 1, 3, 2, 2, 2, 3, 2, 2, 2, 1, 2, 1, 2, 2, 2, 2},
 {1, 2, 0, 3, 1, 2, 1, 3, 2, 2, 2, 3, 2, 2, 1, 3, 2, 2, 1, 2, 1, 2, 2, 2},
 {1, 3, 1, 2, 0, 3, 1, 2, 2, 3, 2, 2, 1, 3, 2, 2, 2, 2, 2, 2, 2, 1, 2, 1},
@@ -142,7 +142,7 @@ const uint8_t edge_manhattan_dist[12][24] = {
 {2, 2, 2, 2, 2, 1, 1, 2, 2, 2, 1, 2, 2, 1, 2, 2, 1, 3, 2, 3, 1, 3, 0, 3},
 };
 
-__device__ __host__ void TurnCube(uint8_t *cube, uint8_t turn) {
+__device__ void TurnCube(uint8_t *cube, uint8_t turn) {
   const uint8_t *positions = positions_on_face[turn / 3];
   uint8_t tmp[8];
   for (uint8_t i = 0; i < 8; i++) {
@@ -163,6 +163,30 @@ __device__ __host__ void TurnCube(uint8_t *cube, uint8_t turn) {
       new_value -= 2;
     }
     cube[turn_position[turn][i]] = new_value;
+  }
+}
+
+__host__ void TurnCubeCPU(uint8_t *cube, uint8_t turn) {
+  const uint8_t *positions = positions_on_face_cpu[turn / 3];
+  uint8_t tmp[8];
+  for (uint8_t i = 0; i < 8; i++) {
+    tmp[i] = cube[positions[i]];
+  }
+  // For each corner position that this turn will affect
+  for (uint8_t i = 0; i < NUM_POSITIONS_PER_FACE / 2; i++) {
+    uint8_t new_value = tmp[i] + turn_orientation_cpu[turn][i];
+    if (tmp[i] / 3 != new_value / 3) {
+      new_value -= 3;
+    }
+    cube[turn_position_cpu[turn][i]] = new_value;
+  }
+  // For each edge position that this turn will affect
+  for (uint8_t i = NUM_POSITIONS_PER_FACE / 2; i < NUM_POSITIONS_PER_FACE; i++) {
+    uint8_t new_value = tmp[i] + turn_orientation_cpu[turn][i];
+    if (tmp[i] / 2 != new_value / 2) {
+      new_value -= 2;
+    }
+    cube[turn_position_cpu[turn][i]] = new_value;
   }
 }
 
