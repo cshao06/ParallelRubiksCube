@@ -18,7 +18,7 @@ __global__ void gpu_search(uint8_t* data, uint8_t* past_step, uint8_t* global_be
     }
     int cur_arc[20];
     int dep = 0;
-    g[0] = past_step[threadIdx.x + blockIdx.x * blockDim.x]
+    g[0] = past_step[threadIdx.x + blockIdx.x * blockDim.x];
     for (int i = 0;i < 20;i ++){
         sk[0][i] = data[global_index + i];
     }
@@ -47,7 +47,7 @@ __global__ void gpu_search(uint8_t* data, uint8_t* past_step, uint8_t* global_be
         }
         while (dep >= 0){
             // visit = true -> check cur_arc, otherwise do some calculation first;
-            if (vist[dep] == false){
+            if (visit[dep] == false){
                 visit[dep] = true;
 
                 if (++ num_of_ext_nodes == 10000){
@@ -78,7 +78,7 @@ __global__ void gpu_search(uint8_t* data, uint8_t* past_step, uint8_t* global_be
                     h += heuristic[sk[dep][i] / 2 - 12][sk[dep][i] % 2 + (i - 8) * 2];
                 }
                 h /= 4.0;
-                if (g[step] + h > upper_bound){
+                if (g[dep] + h > upper_bound){
                     -- dep;
                     continue;
                 }
@@ -176,7 +176,7 @@ void generate_subproblems(uint8_t* cur, int* numofgpu){
         cudaMemcpy(d_step[dev_id], cnt_flat + dev_id * gridsize * blocksize, gridsize * blocksize * sizeof(uint8_t), cudaMemcpyHostToDevice);
 
         cudaMalloc((void **)&best_step[dev_id], sizeof(uint8_t));
-        cudaMemset(best_step[dev_id], 20, sizeof(uint8_t))
+        cudaMemset(best_step[dev_id], 20, sizeof(uint8_t));
     }
 
     dim3 grid_dim = dim3(gridsize, 1, 1);
