@@ -1,6 +1,7 @@
 #include <iostream>
 #include <iomanip>
 #include <time.h>
+#include "cube_generator.h"
 
 using namespace std;
 
