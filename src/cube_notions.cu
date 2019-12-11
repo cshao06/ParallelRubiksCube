@@ -76,7 +76,7 @@ __constant__ const uint8_t edge_manhattan_dist[12][24] = {
   {2, 2, 2, 2, 2, 1, 1, 2, 2, 2, 1, 2, 2, 1, 2, 2, 1, 3, 2, 3, 1, 3, 0, 3},
 };
 
-__device__ void TurnCube(uint8_t *cube, uint8_t turn) {
+__device__ __host__ void TurnCube(uint8_t *cube, uint8_t turn) {
   const uint8_t *positions = positions_on_face[turn / 3];
   uint8_t tmp[8];
   for (uint8_t i = 0; i < 8; i++) {
