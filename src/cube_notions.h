@@ -128,4 +128,12 @@ extern const uint8_t positions_on_face[kNumFaces][NUM_POSITIONS_PER_FACE];
 extern const uint8_t turn_position[kNumTurns][NUM_POSITIONS_PER_FACE];
 extern const uint8_t turn_orientation[kNumTurns][NUM_POSITIONS_PER_FACE];
 
+
+extern const uint8_t positions_on_face_cpu[kNumFaces][NUM_POSITIONS_PER_FACE];
+extern const uint8_t turn_position_cpu[kNumTurns][NUM_POSITIONS_PER_FACE];
+extern const uint8_t turn_orientation_cpu[kNumTurns][NUM_POSITIONS_PER_FACE];
+
 void TurnCube(uint8_t *cube, uint8_t turn);
+
+void TurnCubeCPU(uint8_t *cube, uint8_t turn);
+
