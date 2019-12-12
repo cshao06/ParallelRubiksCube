@@ -32,7 +32,7 @@ __global__ void gpu_search(uint8_t* data, uint8_t* past_step, int* global_best_s
     }
 
     //maximum number of steps need to solve the rubick
-    uint8_t upper_bound = 13;
+    uint8_t upper_bound = 11;
 
     //record preturn, avoid continuous same rotate
     int preturn[20];
@@ -116,6 +116,7 @@ __global__ void gpu_search(uint8_t* data, uint8_t* past_step, int* global_best_s
                         g[dep + 1] = g[dep] + 1;
                         cur_arc[dep] = i;
                         ++ dep;
+                        break;
                     }
                 }
             }else{
@@ -133,6 +134,7 @@ __global__ void gpu_search(uint8_t* data, uint8_t* past_step, int* global_best_s
                     g[dep + 1] = g[dep] + 1;
                     ++ dep;
                     find_new_leaf = true;
+                    break;
                 }
                 if (!find_new_leaf) visit[dep --] = false;
             }
@@ -233,7 +235,7 @@ void generate_subproblems(uint8_t* cur, int* numofgpu){
         cudaMemcpy(d_step[dev_id], cnt_flat + dev_id * gridsize * blocksize, gridsize * blocksize * sizeof(uint8_t), cudaMemcpyHostToDevice);
 
         cudaMalloc((void **)&best_step[dev_id], sizeof(int));
-        cudaMemset(best_step[dev_id], 13, sizeof(int));
+        cudaMemset(best_step[dev_id], 11, sizeof(int));
 
         cudaMalloc((void **)&d_heuristic[dev_id], 12 * 24 * sizeof(uint8_t));
         cudaMemcpy(d_heuristic[dev_id], heuristic_flat, 12 * 24 * sizeof(uint8_t), cudaMemcpyHostToDevice);
@@ -293,7 +295,7 @@ int main(){
     std :: cout << "Number of GPUs on board:\n" << *numofgpu << std :: endl;
 
     uint8_t cur_state[CUBE_ARR_SIZE];
-    generate_cube(cur_state, 13);
+    generate_cube(cur_state, 8);
 
     uint8_t* org_state = new uint8_t[20];
     for (int i = 0;i < 8;i ++) org_state[i] = i * 3;
