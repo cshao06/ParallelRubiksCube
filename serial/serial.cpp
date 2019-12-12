@@ -163,10 +163,10 @@ int main(){
         printf("\n");
     }
     */
-    time_t op = time(NULL);
+    clock_t op = clock();
     iterative_deepening_astar(cur_state);
-    time_t ed = time(NULL);
-    cout << "Time consumed: " << ed - op << "sec" << endl;
+    clock_t ed = clock();
+    cout << "Time consumed: " << ed - op << "ms" << endl;
 
     for (int i = ans[0];i; -- i){
         TurnCube(cur_state, ans[i]);
