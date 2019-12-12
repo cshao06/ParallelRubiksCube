@@ -32,7 +32,7 @@ __global__ void gpu_search(uint8_t* data, uint8_t* past_step, int* global_best_s
     }
 
     //maximum number of steps need to solve the rubick
-    uint8_t upper_bound = 20;
+    uint8_t upper_bound = 13;
 
     //record preturn, avoid continuous same rotate
     int preturn[20];
@@ -42,10 +42,15 @@ __global__ void gpu_search(uint8_t* data, uint8_t* past_step, int* global_best_s
     bool find_ans = false;
     double min_ext_h = limit;
     while (!find_ans){
+        if (min_ext_h < 0){
+            break;
+        }
         limit = min_ext_h;
+        /*
         if (limit > upper_bound){
             break;
         }
+        */
         min_ext_h = -1;
         //need to check the best answer when having explored enough nodes
         int num_of_ext_nodes = 0;
@@ -53,12 +58,13 @@ __global__ void gpu_search(uint8_t* data, uint8_t* past_step, int* global_best_s
         for (int i = 0;i < 20;i ++){
             visit[i] = false;
         }
+        //break;
         while (dep >= 0){
             // visit = true -> check cur_arc, otherwise do some calculation first;
             if (visit[dep] == false){
                 visit[dep] = true;
 
-                if (++ num_of_ext_nodes == 10000){
+                if (++ num_of_ext_nodes == 1000){
                     uint8_t tmp = *global_best_step;
                     if (tmp < upper_bound){
                         upper_bound = tmp;
@@ -87,14 +93,14 @@ __global__ void gpu_search(uint8_t* data, uint8_t* past_step, int* global_best_s
                 }
                 h /= 4.0;
                 if (g[dep] + h > upper_bound){
-                    -- dep;
+                    visit[dep --] = false;
                     continue;
                 }
                 if (g[dep] + h > limit){
                     if (min_ext_h < 0.0 || g[dep] + h < min_ext_h){
                         min_ext_h = g[dep] + h;
                     }
-                    -- dep;
+                    visit[dep --] = false;
                     continue;
                 }else{
                     for (int i = 0;i < kNumTurns;i ++){
@@ -128,7 +134,7 @@ __global__ void gpu_search(uint8_t* data, uint8_t* past_step, int* global_best_s
                     ++ dep;
                     find_new_leaf = true;
                 }
-                if (!find_new_leaf) -- dep;
+                if (!find_new_leaf) visit[dep --] = false;
             }
         }
     }
@@ -227,7 +233,7 @@ void generate_subproblems(uint8_t* cur, int* numofgpu){
         cudaMemcpy(d_step[dev_id], cnt_flat + dev_id * gridsize * blocksize, gridsize * blocksize * sizeof(uint8_t), cudaMemcpyHostToDevice);
 
         cudaMalloc((void **)&best_step[dev_id], sizeof(int));
-        cudaMemset(best_step[dev_id], 20, sizeof(int));
+        cudaMemset(best_step[dev_id], 13, sizeof(int));
 
         cudaMalloc((void **)&d_heuristic[dev_id], 12 * 24 * sizeof(uint8_t));
         cudaMemcpy(d_heuristic[dev_id], heuristic_flat, 12 * 24 * sizeof(uint8_t), cudaMemcpyHostToDevice);
@@ -284,10 +290,10 @@ int main(){
     // check the GPU status
     int* numofgpu = new int;
     cudaGetDeviceCount(numofgpu);
-    std :: cout << "Number of GPUs on board" << *numofgpu << std :: endl;
+    std :: cout << "Number of GPUs on board:\n" << *numofgpu << std :: endl;
 
     uint8_t cur_state[CUBE_ARR_SIZE];
-    generate_cube(cur_state, 10);
+    generate_cube(cur_state, 13);
 
     uint8_t* org_state = new uint8_t[20];
     for (int i = 0;i < 8;i ++) org_state[i] = i * 3;
