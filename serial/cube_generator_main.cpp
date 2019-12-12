@@ -8,14 +8,6 @@ using namespace std;
 // The original state
 uint8_t cube[8 + 12] = {kUrf, kUfl, kUlb, kUbr, kDlf, kDfr, kDrb, kDbl, kUf, kUl, kUb, kUr, kDf, kDr, kDb, kDl, kFr, kFl, kBl, kBr};
 
-void PrintCube(uint8_t *cube, uint8_t size) {
-  cout << "[ ";
-  for (uint8_t i = 0; i < size; i++) {
-    cout << setw(2) << +cube[i] << ", ";
-  }
-  cout << "]" << endl;
-}
-
 int main(int argc, char *argv[]) {
   if (argc != 2) {
     cout << "Usage: ./cube_generator num_turns" << endl;

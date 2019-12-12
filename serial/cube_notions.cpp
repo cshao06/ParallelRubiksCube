@@ -1,5 +1,9 @@
-#include <stdint.h>
+#include <cstdint>
+#include <iostream>
+#include <iomanip>
 #include "cube_notions.h"
+
+using namespace std;
 
 const char *turns_str[kNumTurns] = {
   "U", "U'", "U2",
@@ -98,5 +102,13 @@ void TurnCube(uint8_t *cube, uint8_t turn) {
     }
     cube[turn_position[turn][i]] = new_value;
   }
+}
+
+void PrintCube(uint8_t *cube, uint8_t size) {
+  cout << "[ ";
+  for (uint8_t i = 0; i < size; i++) {
+    cout << setw(2) << +cube[i] << ", ";
+  }
+  cout << "]" << endl;
 }
 
